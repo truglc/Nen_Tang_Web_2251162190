@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản lý sinh viên</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+    }
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    table, th, td {
+      border: 1px solid black;
+      padding: 10px;
+    }
+    #thongBao {
+      color: green;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    button {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Form thêm sinh viên</h2>
+  <form id="formSinhVien">
+    Mã SV: <input type="text" id="maSV" required />
+    Họ tên: <input type="text" id="hoTen" required />
+    Email: <input type="email" id="email" required />
+    <button type="button" id="btnThem">Thêm sinh viên</button>
+    <button type="button" id="btnCapNhat" style="display: none;">Cập nhật</button>
+  </form>
+
+  <div id="thongBao"></div>
+
+  <h2>Danh sách sinh viên</h2>
+  <table id="bangSinhVien">
+    <thead>
+      <tr>
+        <th>Mã SV</th>
+        <th>Họ tên</th>
+        <th>Email</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</body>
+</html>
+<script>
+  let selectedRow = null;
+let form = document.getElementById("formSinhVien");
+
+function thongBao(msg) {
+  let tb = document.getElementById("thongBao");
+  tb.innerText = msg;
+  setTimeout(() => tb.innerText = "", 3000);
+}
+
+document.getElementById("btnThem").addEventListener("click", function () {
+  let maSV = document.getElementById("maSV").value.trim();
+  let hoTen = document.getElementById("hoTen").value.trim();
+  let email = document.getElementById("email").value.trim();
+
+  if (maSV === "" || hoTen === "" || email === "") {
+    alert("Vui lòng nhập đầy đủ thông tin!");
+    return;
+  }
+
+  let regexEmail = /^\S+@\S+\.\S+$/;
+  if (!regexEmail.test(email)) {
+    alert("Email không hợp lệ!");
+    return;
+  }
+
+  if (selectedRow == null) {
+    let table = document.getElementById("bangSinhVien").getElementsByTagName("tbody")[0];
+    let newRow = table.insertRow();
+    newRow.insertCell(0).innerText = maSV;
+    newRow.insertCell(1).innerText = hoTen;
+    newRow.insertCell(2).innerText = email;
+    newRow.insertCell(3).innerHTML = `
+      <button onclick="suaDong(this)">Sửa</button>
+      <button onclick="xoaDong(this)">Xóa</button>
+    `;
+    thongBao("Thêm sinh viên thành công!");
+  } else {
+    selectedRow.cells[0].innerText = maSV;
+    selectedRow.cells[1].innerText = hoTen;
+    selectedRow.cells[2].innerText = email;
+    thongBao("Cập nhật sinh viên thành công!");
+    selectedRow = null;
+    document.getElementById("btnThem").style.display = "inline";
+    document.getElementById("btnCapNhat").style.display = "none";
+  }
+
+  form.reset();
+});
+
+document.getElementById("btnCapNhat").addEventListener("click", function () {
+  document.getElementById("btnThem").click(); 
+});
+
+function xoaDong(btn) {
+  if (confirm("Bạn có chắc chắn muốn xoá?")) {
+    btn.parentElement.parentElement.remove();
+    thongBao("Xoá thành công!");
+    form.reset();
+  }
+}
+
+function suaDong(btn) {
+  selectedRow = btn.parentElement.parentElement;
+  document.getElementById("maSV").value = selectedRow.cells[0].innerText;
+  document.getElementById("hoTen").value = selectedRow.cells[1].innerText;
+  document.getElementById("email").value = selectedRow.cells[2].innerText;
+
+  document.getElementById("btnThem").style.display = "none";
+  document.getElementById("btnCapNhat").style.display = "inline";
+}
+
+</script>
