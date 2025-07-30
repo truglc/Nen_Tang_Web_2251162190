@@ -45,7 +45,7 @@
 </div>
 
     <table class="table table-bordered table-striped">
-        <thead>
+        <thead class="table-dark">
         <tr>
             <th>Hành động</th>
             <th>ID</th>
@@ -59,9 +59,19 @@
       <tbody id="transaction-table">
       </tbody>
     </table>
-  </div>
-<div class="text-start mt-3">
+    <div class="text-start mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+  <div id="resultCount" class="text-muted small">Hiển thị 5 kết quả</div>
+</div>
   <button class="btn btn-danger" onclick="deleteAllTransactions()">🗑️ Xóa tất cả</button>
+<div class="d-flex justify-content-end mt-2">
+  <div id="resultSummary" style="font-weight: 600; font-size: 1rem; color: #333;">
+    1 trong 10 kết quả
+  </div>
+</div>
+
+  </div>
+
 </div>
 
   <div class="modal fade" id="addModal" tabindex="-1">
@@ -97,6 +107,7 @@
   </div>
 <ul class="pagination justify-content-center" id="pagination"></ul>
 
+
   <footer class="bg-primary text-white text-center text-md-start mt-5">
   <div class="container p-4">
     <h5 class="text-uppercase fw-bold">TRƯỜNG ĐẠI HỌC THỦY LỢI</h5>
@@ -111,7 +122,6 @@
 </footer>
 
   <script src="data.js"></script>
-  <script src="main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
