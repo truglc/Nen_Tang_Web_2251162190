@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý giao dịch</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Trường Đại học Thủy lợi</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+      <ul class="navbar-nav me-2">
+        <li class="nav-item">
+          <a class="nav-link active" href="#">Trang chủ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Quản lý của hàng</a>
+        </li>
+      </ul>
+      <form class="d-flex me-2">
+        <input class="form-control me-2" type="search" placeholder="Nhập nội dung tìm kiếm">
+        <button class="btn btn-success" type="submit">TÌM KIẾM</button>
+      </form>
+      <button class="btn btn-outline-light">Đăng nhập</button>
+    </div>
+  </div>
+</nav>
+
+  <div class="container mt-4">
+    <h4>Quản lý giao dịch</h4>
+<div class="d-flex justify-content-between align-items-center my-3 flex-wrap gap-2">
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">+ Thêm</button>
+    <button class="btn btn-success" onclick="exportToCSV()">📄 Xuất CSV</button>
+  </div>
+
+  <div class="flex-grow-1 d-flex justify-content-center">
+    <input type="text" id="searchInput" class="form-control w-75" placeholder="🔍 Tìm kiếm theo khách hàng, nhân viên, số tiền, ngày mua">
+  </div>
+</div>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Hành động</th>
+            <th>ID</th>
+            <th>Khách hàng</th>
+            <th>Nhân viên</th>
+            <th>Số tiền</th>
+            <th>Ngày mua</th>
+        </tr>
+        </thead>
+
+      <tbody id="transaction-table">
+      </tbody>
+    </table>
+  </div>
+<div class="text-start mt-3">
+  <button class="btn btn-danger" onclick="deleteAllTransactions()">🗑️ Xóa tất cả</button>
+</div>
+
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm giao dịch</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addForm">
+            <div class="mb-3">
+              <label>Khách hàng</label>
+              <input type="text" class="form-control" id="customer">
+            </div>
+            <div class="mb-3">
+              <label>Nhân viên</label>
+              <input type="text" class="form-control" id="staff">
+            </div>
+            <div class="mb-3">
+              <label>Số tiền</label>
+              <input type="number" class="form-control" id="amount">
+            </div>
+            <div id="error" class="text-danger mb-2"></div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-success">Thêm</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+<ul class="pagination justify-content-center" id="pagination"></ul>
+
+  <footer class="bg-primary text-white text-center text-md-start mt-5">
+  <div class="container p-4">
+    <h5 class="text-uppercase fw-bold">TRƯỜNG ĐẠI HỌC THỦY LỢI</h5>
+    <p>
+      Địa chỉ: 175 Tây Sơn, Đống Đa, Hà Nội<br>
+      Điện thoại: (024) 38522201 – Fax: (024) 35633351<br>
+      Email: <a href="mailto:phongctctsv@tlu.edu.vn" class="text-white text-decoration-underline">phongctctsv@tlu.edu.vn</a>
+    </p>
+  </div>
+  <nav>
+</nav>
+</footer>
+
+  <script src="data.js"></script>
+  <script src="main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const tbody = document.getElementById("transaction-table");
+  const form = document.getElementById("addForm");
+  const error = document.getElementById("error");
+
+function renderTable() {
+  tbody.innerHTML = "";
+
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const currentData = transactions.slice(start, end);
+
+  currentData.forEach((t, index) => {
+    const row = `
+      <tr>
+        <td>
+          <button class="btn btn-sm btn-warning me-1" onclick="editRow(${start + index})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteRow(${start + index})">🗑️</button>
+        </td>
+        <td>${t.id}</td>
+        <td>${t.customer}</td>
+        <td>${t.staff}</td>
+        <td>${t.amount.toLocaleString()}</td>
+        <td>${t.date}</td>
+      </tr>`;
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+
+  renderPagination();
+}
+const itemsPerPage = 5; 
+let currentPage = 1;
+
+function renderPagination() {
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement("li");
+    li.className = "page-item" + (i === currentPage ? " active" : "");
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener("click", (e) => {
+      e.preventDefault();
+      currentPage = i;
+      renderTable();
+    });
+    pagination.appendChild(li);
+  }
+}
+
+    function deleteRow(index) {
+        if (confirm("Bạn có chắc muốn xóa giao dịch này?")) {
+            transactions.splice(index, 1);
+            renderTable();
+        }
+        }
+
+  function validateInput(customer, staff, amount) {
+    if (!customer || !staff || !amount) {
+      return "Vui lòng không để trống thông tin.";
+    }
+    if (customer.length > 30) {
+      return "Tên khách hàng không được vượt quá 30 ký tự.";
+    }
+    if (staff.length > 30) {
+      return "Tên nhân viên không được vượt quá 30 ký tự.";
+    }
+    return "";
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const customer = document.getElementById("customer").value.trim();
+    const staff = document.getElementById("staff").value.trim();
+    const amount = parseInt(document.getElementById("amount").value);
+
+    const msg = validateInput(customer, staff, amount);
+    if (msg) {
+      error.textContent = msg;
+      return;
+    }
+
+    const newTransaction = {
+      id: Math.floor(1000 + Math.random() * 9000),
+      customer,
+      staff,
+      amount,
+      date: new Date().toLocaleString("vi-VN", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    };
+    transactions.push(newTransaction);
+    renderTable();
+    form.reset();
+    error.textContent = "";
+    bootstrap.Modal.getInstance(document.getElementById("addModal")).hide();
+  });
+
+  renderTable();
+});
+
+</script>
