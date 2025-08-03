@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý giao dịch</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Trường Đại học Thủy lợi</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+      <ul class="navbar-nav me-2">
+        <li class="nav-item"><a class="nav-link active" href="#">Trang chủ</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Quản lý cửa hàng</a></li>
+      </ul>
+      <form class="d-flex me-2">
+        <input class="form-control me-2" type="search" placeholder="Nhập nội dung tìm kiếm">
+        <button class="btn btn-success" type="submit">TÌM KIẾM</button>
+      </form>
+      <button class="btn btn-outline-light">Đăng nhập</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h4>Quản lý giao dịch</h4>
+  <div class="d-flex justify-content-between align-items-center my-3 flex-wrap gap-2">
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">+ Thêm</button>
+      <button class="btn btn-success" id="exportCSV">📄 Xuất CSV</button>
+    </div>
+    <div class="flex-grow-1 d-flex justify-content-center">
+      <input type="text" id="searchInput" class="form-control w-75" placeholder="🔍 Tìm kiếm theo khách hàng, nhân viên, số tiền, ngày mua">
+    </div>
+  </div>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>Hành động</th>
+        <th>ID</th>
+        <th>Khách hàng</th>
+        <th>Nhân viên</th>
+        <th>Số tiền</th>
+        <th>Ngày mua</th>
+      </tr>
+    </thead>
+    <tbody id="transaction-table"></tbody>
+  </table>
+
+  <div class="d-flex justify-content-between align-items-center mt-2">
+    <button class="btn btn-danger" id="deleteAll">🗑️ Xóa tất cả</button>
+    <div id="resultSummary" class="text-muted small">Hiển thị 0 kết quả</div>
+  </div>
+
+  <ul class="pagination justify-content-center mt-3" id="pagination"></ul>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thêm giao dịch</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addForm">
+          <div class="mb-3"><label>Khách hàng</label><input type="text" class="form-control" id="customer"></div>
+          <div class="mb-3"><label>Nhân viên</label><input type="text" class="form-control" id="staff"></div>
+          <div class="mb-3"><label>Số tiền</label><input type="number" class="form-control" id="amount"></div>
+          <div id="error" class="text-danger mb-2"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-primary text-white text-center text-md-start mt-5">
+  <div class="container p-4">
+    <h5 class="text-uppercase fw-bold">TRƯỜNG ĐẠI HỌC THỦY LỢI</h5>
+    <p>Địa chỉ: 175 Tây Sơn, Đống Đa, Hà Nội<br>Điện thoại: (024) 38522201 – Fax: (024) 35633351<br>Email:
+      <a href="mailto:phongctctsv@tlu.edu.vn" class="text-white text-decoration-underline">phongctctsv@tlu.edu.vn</a>
+    </p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let currentPage = 1;
+const itemsPerPage = 5;
+
+function renderTable(data) {
+  const tbody = $("#transaction-table");
+  tbody.empty();
+
+  const start = (currentPage - 1) * itemsPerPage;
+  const pageData = data.slice(start, start + itemsPerPage);
+
+  pageData.forEach((t, i) => {
+    const row = `
+      <tr>
+        <td>
+          <button class="btn btn-sm btn-danger delete-btn" data-index="${start + i}">🗑️</button>
+        </td>
+        <td>${t.id}</td>
+        <td>${t.customer}</td>
+        <td>${t.staff}</td>
+        <td>${t.amount.toLocaleString()}</td>
+        <td>${t.date}</td>
+      </tr>
+    `;
+    tbody.append(row);
+  });
+
+  $("#resultSummary").text(`Hiển thị ${data.length} kết quả`);
+  renderPagination(data);
+}
+
+function renderPagination(data) {
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const $pagination = $("#pagination");
+  $pagination.empty();
+
+  for (let i = 1; i <= totalPages; i++) {
+    const $li = $(`<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#">${i}</a></li>`);
+    $li.on("click", (e) => {
+      e.preventDefault();
+      currentPage = i;
+      renderTable(filterTransactions());
+    });
+    $pagination.append($li);
+  }
+}
+
+function filterTransactions() {
+  const keyword = $("#searchInput").val().toLowerCase();
+  return transactions.filter(t =>
+    t.customer.toLowerCase().includes(keyword) ||
+    t.staff.toLowerCase().includes(keyword) ||
+    t.amount.toString().includes(keyword) ||
+    t.date.toLowerCase().includes(keyword)
+  );
+}
+
+function exportToCSV(data) {
+  let csv = "ID,Khách hàng,Nhân viên,Số tiền,Ngày mua\n";
+  data.forEach(t => {
+    csv += `${t.id},${t.customer},${t.staff},${t.amount},${t.date}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "transactions.csv";
+  link.click();
+}
+
+$(document).ready(function () {
+  renderTable(transactions);
+
+  $("#addForm").on("submit", function (e) {
+    e.preventDefault();
+    const customer = $("#customer").val().trim();
+    const staff = $("#staff").val().trim();
+    const amount = parseInt($("#amount").val());
+    const error = $("#error");
+
+    if (!customer || !staff || !amount) {
+      error.text("Vui lòng không để trống thông tin.");
+      return;
+    }
+    if (customer.length > 30 || staff.length > 30) {
+      error.text("Tên quá dài.");
+      return;
+    }
+
+    transactions.push({
+      id: Math.floor(Math.random() * 9000 + 1000),
+      customer,
+      staff,
+      amount,
+      date: new Date().toLocaleString("vi-VN")
+    });
+
+    $("#addForm")[0].reset();
+    error.text("");
+    bootstrap.Modal.getInstance(document.getElementById("addModal")).hide();
+    renderTable(filterTransactions());
+  });
+
+  $("#searchInput").on("input", function () {
+    currentPage = 1;
+    renderTable(filterTransactions());
+  });
+
+  $(document).on("click", ".delete-btn", function () {
+    const index = $(this).data("index");
+    if (confirm("Bạn có chắc muốn xóa giao dịch này?")) {
+      transactions.splice(index, 1);
+      renderTable(filterTransactions());
+    }
+  });
+
+  $("#deleteAll").on("click", function () {
+    if (confirm("Xác nhận xóa toàn bộ giao dịch?")) {
+      transactions = [];
+      renderTable([]);
+    }
+  });
+
+  $("#exportCSV").on("click", function () {
+    exportToCSV(filterTransactions());
+  });
+});
+</script>
+</body>
+</html>
